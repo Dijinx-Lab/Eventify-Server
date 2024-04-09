@@ -18,6 +18,7 @@ const databaseConfig = {
     eventsDatabase: process.env.EVENT_DB,
     passDatabase: process.env.PASS_DB,
     categoriesDatabase: process.env.CATEGORY_DB,
+    utilitiesDatabase: process.env.UTILITY_DB,
   },
 };
 

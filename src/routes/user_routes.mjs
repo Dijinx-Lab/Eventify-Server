@@ -28,12 +28,12 @@ router
 router
   .route(baseRoute + "/verify")
   .post(
-    checkRequiredFieldsMiddleware(["type", "code"]),
+    checkRequiredFieldsMiddleware(["type", "code", "email"]),
     UserController.apiVerifyCredential
   );
 
 router.route(baseRoute + "/verify/send").post(
-  checkRequiredFieldsMiddleware(["email"]),
+  checkRequiredFieldsMiddleware(["type", "email"]),
 
   UserController.apiSendVerification
 );
@@ -45,6 +45,8 @@ router
     UserController.apiSignInUser
   );
 
+router.route(baseRoute + "/sso").post(UserController.apiSsoUser);
+
 router
   .route(baseRoute + "/detail")
   .get(checkTokenMiddleware, UserController.apiGetUserDetail);
@@ -52,5 +54,28 @@ router
 router
   .route(baseRoute + "/sign-out")
   .delete(checkTokenMiddleware, UserController.apiSignOutUser);
+
+router
+  .route(baseRoute + "/edit-profile")
+  .put(checkTokenMiddleware, UserController.apiUpdateUserProfile);
+
+router
+  .route(baseRoute + "/change-password")
+  .post(
+    checkRequiredFieldsMiddleware([
+      "old_password",
+      "password",
+      "confirm_password",
+    ]),
+    checkTokenMiddleware,
+    UserController.apiUpdateUserPassword
+  );
+
+router
+  .route(baseRoute + "/forgot-password")
+  .post(
+    checkRequiredFieldsMiddleware(["email", "password", "confirm_password"]),
+    UserController.apiForgotPassword
+  );
 
 export default router;

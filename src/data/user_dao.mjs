@@ -87,9 +87,32 @@ export default class UserDAO {
     }
   }
 
-  static async getUserByFireIDFromDB(id) {
+  static async getUserByCityFromDB(city) {
     try {
-      const user = await usercon.findOne({ fire_uid: id });
+      const regex = new RegExp(city, "i");
+      const users = await usercon
+        .find({ last_city: regex, deleted_on: null })
+        .toArray();
+      return users;
+    } catch (e) {
+      console.error(`Unable to get user by email: ${e}`);
+      return null;
+    }
+  }
+
+  static async getUserByGoogleIDFromDB(id) {
+    try {
+      const user = await usercon.findOne({ google_id: id });
+      return user;
+    } catch (e) {
+      console.error(`Unable to get user by ID: ${e}`);
+      return null;
+    }
+  }
+
+  static async getUserByAppleIDFromDB(id) {
+    try {
+      const user = await usercon.findOne({ apple_id: id });
       return user;
     } catch (e) {
       console.error(`Unable to get user by ID: ${e}`);

@@ -45,15 +45,51 @@ export default class UserController {
 
   static async apiSignInUser(req, res, next) {
     try {
-      const { email, phone, country_code, password } = req.body;
+      const { email, phone, country_code, password, fcm_token } = req.body;
 
       const serviceResponse = await UserService.signInUser(
         email,
         phone,
         country_code,
-        password
+        password,
+        fcm_token
       );
-      console.log(typeof serviceResponse);
+
+      if (typeof serviceResponse === "string") {
+        res
+          .status(200)
+          .json({ success: false, data: {}, message: serviceResponse });
+      } else if (typeof serviceResponse === "number") {
+        res.status(serviceResponse).json({
+          success: false,
+          data: {},
+          message:
+            "You'll need to verify your email to proceed, code is sent to your email",
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          data: serviceResponse,
+          message: "",
+        });
+      }
+    } catch (e) {
+      res.status(500).json({ success: false, data: {}, message: e.message });
+    }
+  }
+
+  static async apiSsoUser(req, res, next) {
+    try {
+      const { email, name, apple_id, google_id, fcm_token } = req.body;
+
+      const serviceResponse = await UserService.ssoUser(
+        email,
+        name,
+        apple_id,
+        google_id,
+        fcm_token
+      );
+
       if (typeof serviceResponse === "string") {
         res
           .status(200)
@@ -134,7 +170,7 @@ export default class UserController {
         res.status(200).json({
           success: true,
           data: serviceResponse,
-          message: "",
+          message: "Verified successfully",
         });
       }
     } catch (e) {
@@ -144,8 +180,8 @@ export default class UserController {
 
   static async apiSendVerification(req, res, next) {
     try {
-      const { email } = req.body;
-      const serviceResponse = await UserService.sendVerification(email);
+      const { type, email } = req.body;
+      const serviceResponse = await UserService.sendVerification(type, email);
       if (typeof serviceResponse === "string") {
         res
           .status(200)
@@ -155,6 +191,97 @@ export default class UserController {
           success: true,
           data: serviceResponse,
           message: `A code has been sent to your ${email}, please check your inbox`,
+        });
+      }
+    } catch (e) {
+      res.status(500).json({ success: false, data: {}, message: e.message });
+    }
+  }
+
+  static async apiUpdateUserProfile(req, res, next) {
+    try {
+      const {
+        first_name,
+        last_name,
+        phone,
+        country_code,
+        last_city,
+        fcm_token,
+      } = req.body;
+      const updateFields = Object.fromEntries(
+        Object.entries({
+          first_name,
+          last_name,
+          phone,
+          country_code,
+          last_city,
+          fcm_token,
+        }).filter(([_, value]) => value !== undefined && value !== null)
+      );
+      const token = TokenUtil.cleanToken(req.headers["authorization"]);
+      const serviceResponse = await UserService.updateProfile(
+        token,
+        updateFields
+      );
+      if (typeof serviceResponse === "string") {
+        res
+          .status(200)
+          .json({ success: false, data: {}, message: serviceResponse });
+      } else {
+        res.status(200).json({
+          success: true,
+          data: serviceResponse,
+          message: "",
+        });
+      }
+    } catch (e) {
+      res.status(500).json({ success: false, data: {}, message: e.message });
+    }
+  }
+
+  static async apiUpdateUserPassword(req, res, next) {
+    try {
+      const { old_password, password, confirm_password } = req.body;
+      const token = TokenUtil.cleanToken(req.headers["authorization"]);
+      const serviceResponse = await UserService.updatePassword(
+        token,
+        old_password,
+        password,
+        confirm_password
+      );
+      if (typeof serviceResponse === "string") {
+        res
+          .status(200)
+          .json({ success: false, data: {}, message: serviceResponse });
+      } else {
+        res.status(200).json({
+          success: true,
+          data: serviceResponse,
+          message: "",
+        });
+      }
+    } catch (e) {
+      res.status(500).json({ success: false, data: {}, message: e.message });
+    }
+  }
+
+  static async apiForgotPassword(req, res, next) {
+    try {
+      const { email, password, confirm_password } = req.body;
+      const serviceResponse = await UserService.forgotPassword(
+        email,
+        password,
+        confirm_password
+      );
+      if (typeof serviceResponse === "string") {
+        res
+          .status(200)
+          .json({ success: false, data: {}, message: serviceResponse });
+      } else {
+        res.status(200).json({
+          success: true,
+          data: serviceResponse,
+          message: "",
         });
       }
     } catch (e) {

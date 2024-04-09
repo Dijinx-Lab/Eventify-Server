@@ -22,6 +22,14 @@ router
   );
 
 router
+  .route(baseRoute + "/create/all")
+  .post(
+    checkRequiredFieldsMiddleware(["passes"]),
+    checkTokenMiddleware,
+    PassController.apiCreatePasses
+  );
+
+router
   .route(baseRoute + "/update")
   .put(
     checkRequiredFieldsMiddleware(["id"]),
@@ -35,6 +43,14 @@ router
     checkRequiredFieldsMiddleware(["id"]),
     checkTokenMiddleware,
     PassController.apiDeletePass
+  );
+
+router
+  .route(baseRoute + "/delete/all")
+  .delete(
+    checkRequiredFieldsMiddleware(["id"]),
+    checkTokenMiddleware,
+    PassController.apiDeletePasses
   );
 
 export default router;

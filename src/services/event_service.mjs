@@ -4,6 +4,7 @@ import PatternUtil from "../utility/pattern_util.mjs";
 import CategoryService from "./category_service.mjs";
 import PassService from "./pass_service.mjs";
 import UserService from "./user_service.mjs";
+import FirebaseUtility from "../utility/fcm_utility.mjs";
 
 export default class EventService {
   static async connectDatabase(client) {
@@ -38,7 +39,6 @@ export default class EventService {
       const passObjIds = passIds.map((passId) => {
         return new ObjectId(passId);
       });
-      console.log(passObjIds);
       const [user, category] = await Promise.all([
         UserService.getUserFromToken(token),
         CategoryService.getCategoryById(categoryObjId),
@@ -79,7 +79,7 @@ export default class EventService {
         category_id: categoryObjId,
         contact: contact,
         stats: stats,
-        alert_sent_on: notificationSentOn,
+        alert_sent_on: listingVisibile === true ? notificationSentOn : null,
         created_on: createdOn,
         deleted_on: deletedOn,
       };
@@ -90,6 +90,10 @@ export default class EventService {
         EventDAO.getEventByIDFromDB(addedEventId),
         PassService.getPassesAndConnectEvent(passObjIds, addedEventId),
       ]);
+
+      if (listingVisibile) {
+        await this.notifyNearByUsers(user, databaseEvent);
+      }
       databaseEvent.pass_ids = databasePasses;
       databaseEvent.category = category;
       databaseEvent.stats = this.getStatsNumbers(databaseEvent.stats);
@@ -104,7 +108,6 @@ export default class EventService {
         "created_on",
         "deleted_on",
         "alert_sent_on",
-        "listing_visibile",
         "user_id",
       ]);
 
@@ -122,8 +125,26 @@ export default class EventService {
       if (filter.toLowerCase() === "all") {
         events = await EventDAO.getAllEventFromDB();
       } else if (filter.toLowerCase() === "user") {
-        const user = UserService.getUserFromToken(token);
+        const user = await UserService.getUserFromToken(token);
         events = await EventDAO.getAllEventByUserFromDB(user._id);
+      } else if (filter.toLowerCase() === "bookmarked") {
+        if (user.bookmarked && user.bookmarked.length !== 0) {
+          events = await Promise.all(
+            user.bookmarked.map(async (id) => {
+              return await EventDAO.getEventByIDFromDB(id);
+            })
+          );
+        }
+        events = events.filter(Boolean);
+      } else if (filter.toLowerCase() === "alerted") {
+        if (user.alerted && user.alerted.length !== 0) {
+          events = await Promise.all(
+            user.alerted.map(async (id) => {
+              return await EventDAO.getEventByIDFromDB(id);
+            })
+          );
+          events = events.filter(Boolean);
+        }
       } else {
         events = await EventDAO.getAllEventsByCityFromDB(filter);
       }
@@ -138,6 +159,30 @@ export default class EventService {
       return { events: filteredEvents };
     } catch (e) {
       return e.message;
+    }
+  }
+
+  static async notifyNearByUsers(eventUser, event) {
+    try {
+      const users = await UserService.getUserByCity(event.city);
+
+      for (const user of users) {
+        if (user.fcm_token === null || user.fcm_token === "x") continue;
+
+        const alerted = user.alerted;
+        alerted.push(event._id);
+        user.alerted = alerted;
+        await UserService.updateUserByUser(user);
+        await FirebaseUtility.sendNotification(
+          user.fcm_token,
+          event._id.toString(),
+          "open_alerts",
+          "New event near you 🎉 🎉",
+          `${eventUser.first_name} just posted a new event ${event.name}. Click here to find out more about it`
+        );
+      }
+    } catch (e) {
+      console.log(e);
     }
   }
 
@@ -157,7 +202,13 @@ export default class EventService {
       PassService.getPassesByEventId(event._id),
     ]);
     let preferences = null;
+    let myEvent = false;
+    event.my_event = myEvent;
     if (userId) {
+      if (event.user_id.toString() === userId.toString()) {
+        myEvent = true;
+      }
+      event.my_event = myEvent;
       let bookmarked = false;
       let preference = null;
 
@@ -198,13 +249,7 @@ export default class EventService {
 
     return (filteredEvent = PatternUtil.filterParametersFromObject(
       filteredEvent,
-      [
-        "created_on",
-        "deleted_on",
-        "alert_sent_on",
-        "listing_visibile",
-        "user_id",
-      ]
+      ["created_on", "deleted_on", "alert_sent_on", "user_id"]
     ));
   }
 
@@ -225,11 +270,38 @@ export default class EventService {
         return "We do not have an event with the specified ID";
       }
 
-      existingEvent = await EventDAO.updateEventFieldByID(id, updateFields);
+      if (updateFields.pass_ids) {
+        const passObjIds = updateFields.pass_ids.map((passId) => {
+          return new ObjectId(passId);
+        });
+        updateFields.pass_ids = passObjIds;
+      }
+
+      const processedUpdateFields = this.convertToDotNotation(updateFields);
+
+      existingEvent = await EventDAO.updateEventFieldByID(
+        id,
+        processedUpdateFields
+      );
 
       const updatedEvent = await EventDAO.getEventByIDFromDB(id);
+
       const formattedEvent = await this.getFormattedEvent(updatedEvent);
       return { event: formattedEvent };
+    } catch (e) {
+      console.log(e.message);
+      return e.message;
+    }
+  }
+
+  static async replaceCompleteEvent(event) {
+    try {
+      const existingEvent = await EventDAO.updateEventFieldByID(
+        event._id,
+        event
+      );
+
+      return {};
     } catch (e) {
       console.log(e.message);
       return e.message;
@@ -245,6 +317,27 @@ export default class EventService {
         return "You do not have an event with the specified ID";
       }
 
+      if (updateFields.pass_ids) {
+        const passObjIds = updateFields.pass_ids.map((passId) => {
+          return new ObjectId(passId);
+        });
+        existingEvent = await EventDAO.updateEventFieldByID(eventObjId, {
+          pass_ids: passObjIds,
+        });
+        const databasePasses = await PassService.getPassesAndConnectEvent(
+          passObjIds,
+          eventObjId
+        );
+        delete updateFields.pass_ids;
+      }
+      if (updateFields.category_id) {
+        const categoryObjId = new ObjectId(updateFields.category_id);
+        existingEvent = await EventDAO.updateEventFieldByID(eventObjId, {
+          category_id: categoryObjId,
+        });
+        delete updateFields.category_id;
+      }
+
       const processedUpdateFields = this.convertToDotNotation(updateFields);
 
       existingEvent = await EventDAO.updateEventFieldByID(
@@ -253,7 +346,10 @@ export default class EventService {
       );
 
       const updatedEvent = await EventDAO.getEventByIDFromDB(eventObjId);
-      const filteredEvent = await this.getFormattedEvent(updatedEvent);
+      const filteredEvent = await this.getFormattedEvent(
+        updatedEvent,
+        updatedEvent.user_id
+      );
 
       return { event: filteredEvent };
     } catch (e) {
@@ -297,26 +393,23 @@ export default class EventService {
     }
   }
 
-  static convertToDotNotation(updateFields, prefix = "") {
+  static convertToDotNotation(updateFields) {
     const processedUpdateFields = {};
     for (const key in updateFields) {
       if (Object.prototype.hasOwnProperty.call(updateFields, key)) {
-        const value = updateFields[key];
-        const newKey = prefix ? `${prefix}.${key}` : key;
-
-        if (Array.isArray(value)) {
-          processedUpdateFields[newKey] = value.map((item, index) => {
-            if (typeof item === "object" && item !== null) {
-              return this.convertToDotNotation(item, `${newKey}.${index}`);
-            } else {
-              return item;
+        if (
+          typeof updateFields[key] === "object" &&
+          updateFields[key] !== null
+        ) {
+          const nestedFields = this.convertToDotNotation(updateFields[key]);
+          for (const nestedKey in nestedFields) {
+            if (Object.prototype.hasOwnProperty.call(nestedFields, nestedKey)) {
+              processedUpdateFields[`${key}.${nestedKey}`] =
+                nestedFields[nestedKey];
             }
-          });
-        } else if (typeof value === "object" && value !== null) {
-          const nestedFields = this.convertToDotNotation(value, newKey);
-          Object.assign(processedUpdateFields, nestedFields);
+          }
         } else {
-          processedUpdateFields[newKey] = value;
+          processedUpdateFields[key] = updateFields[key];
         }
       }
     }

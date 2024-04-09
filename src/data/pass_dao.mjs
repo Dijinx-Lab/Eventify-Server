@@ -79,4 +79,19 @@ export default class PassDAO {
       return null;
     }
   }
+
+  static async deletePassByEventIDFromDB(id) {
+    try {
+      const result = await passcon.deleteMany({ event_id: id });
+
+      if (result.deletedCount === 1) {
+        return true;
+      } else {
+        return true;
+      }
+    } catch (e) {
+      console.error(`Unable to delete pass by ID: ${e}`);
+      return null;
+    }
+  }
 }

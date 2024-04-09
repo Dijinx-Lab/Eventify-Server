@@ -12,6 +12,39 @@ export default class PassService {
     }
   }
 
+  static async createPasses(passes) {
+    try {
+      const passIds = [];
+      for (const pass of passes) {
+        const { name, full_price, discount } = pass;
+        const addedPassId = await this.addPassToDB(name, full_price, discount);
+        passIds.push(addedPassId);
+      }
+      return { pass_ids: passIds };
+    } catch (error) {
+      return error.message;
+    }
+  }
+
+  static async addPassToDB(name, fullPrice, discount) {
+    try {
+      const passDocument = {
+        event_id: "",
+        name: name,
+        full_price: fullPrice,
+        discount: discount ?? null,
+        created_on: new Date(),
+        deleted_on: null,
+      };
+
+      const addedPassId = await PassDAO.addPassToDB(passDocument);
+
+      return addedPassId;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
   static async createPass(eventId, name, fullPrice, discount) {
     try {
       if (discount) {
@@ -126,6 +159,16 @@ export default class PassService {
     }
   }
 
+  static async deletePasses(id) {
+    try {
+      const eventObjId = new ObjectId(id);
+      const existingPass = await PassDAO.deletePassByEventIDFromDB(eventObjId);
+      return {};
+    } catch (e) {
+      return e.message;
+    }
+  }
+
   static async softDeletePass(id) {
     try {
       const passObjId = new ObjectId(id);
@@ -145,28 +188,28 @@ export default class PassService {
     }
   }
 
-    static convertToDotNotation(updateFields) {
-      const processedUpdateFields = {};
-      for (const key in updateFields) {
-        if (Object.prototype.hasOwnProperty.call(updateFields, key)) {
-          if (
-            typeof updateFields[key] === "object" &&
-            updateFields[key] !== null
-          ) {
-            const nestedFields = this.convertToDotNotation(updateFields[key]);
-            for (const nestedKey in nestedFields) {
-              if (Object.prototype.hasOwnProperty.call(nestedFields, nestedKey)) {
-                processedUpdateFields[`${key}.${nestedKey}`] =
-                  nestedFields[nestedKey];
-              }
+  static convertToDotNotation(updateFields) {
+    const processedUpdateFields = {};
+    for (const key in updateFields) {
+      if (Object.prototype.hasOwnProperty.call(updateFields, key)) {
+        if (
+          typeof updateFields[key] === "object" &&
+          updateFields[key] !== null
+        ) {
+          const nestedFields = this.convertToDotNotation(updateFields[key]);
+          for (const nestedKey in nestedFields) {
+            if (Object.prototype.hasOwnProperty.call(nestedFields, nestedKey)) {
+              processedUpdateFields[`${key}.${nestedKey}`] =
+                nestedFields[nestedKey];
             }
-          } else {
-            processedUpdateFields[key] = updateFields[key];
           }
+        } else {
+          processedUpdateFields[key] = updateFields[key];
         }
       }
-      return processedUpdateFields;
     }
+    return processedUpdateFields;
+  }
 
   static async getPassesAndConnectEvent(passIds, eventId) {
     try {

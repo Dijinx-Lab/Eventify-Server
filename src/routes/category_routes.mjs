@@ -8,16 +8,11 @@ const router = express.Router();
 const baseRoute = "/category";
 
 //api routes
-router
-  .route(baseRoute + "/create")
-  .post(
-    checkRequiredFieldsMiddleware(["name", "description"]),
-    checkTokenMiddleware,
-    CategoryController.apiCreateCategory
-  );
+router.route(baseRoute + "/create").post(
+  checkRequiredFieldsMiddleware(["name", "description"]),
+  CategoryController.apiCreateCategory
+);
 
-router
-  .route(baseRoute + "/list")
-  .get(checkTokenMiddleware, CategoryController.apiListCategories);
+router.route(baseRoute + "/list").get(CategoryController.apiListCategories);
 
 export default router;
