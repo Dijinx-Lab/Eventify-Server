@@ -56,7 +56,7 @@ app.use(baseUrl, utilityRoutes);
 
 app.use("/", (req, res) =>
   res.status(200).json({
-    message: "Hello World",
+    message: "Hello",
   })
 );
 client
@@ -77,4 +77,3 @@ client
       console.log(`http server running => ${port}`);
     });
   });
-  
