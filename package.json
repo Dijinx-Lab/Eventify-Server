@@ -2,10 +2,10 @@
   "name": "eventify-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.mjs",
+  "main": "api/index.mjs",
   "type": "module",
   "scripts": {
-    "start": "node index.mjs",
+    "start": "node api/index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
