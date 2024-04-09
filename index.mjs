@@ -40,6 +40,25 @@ const client = new MongoClient(uri, {
   },
 });
 
+const app = express();
+
+app.use(cors());
+app.use(bodyParser.json());
+
+const baseUrl = "/api/v1/eventify";
+
+app.use(baseUrl, userRoutes);
+app.use(baseUrl, passRoutes);
+app.use(baseUrl, categoryRoutes);
+app.use(baseUrl, eventRoutes);
+app.use(baseUrl, statsRoutes);
+app.use(baseUrl, utilityRoutes);
+
+app.use("/", (req, res) =>
+  res.status(200).json({
+    message: "Hello World",
+  })
+);
 client
   .connect()
   .catch((err) => {
@@ -58,22 +77,3 @@ client
       console.log(`http server running => ${port}`);
     });
   });
-
-const app = express();
-
-app.use(cors());
-app.use(bodyParser.json());
-
-const baseUrl = "/api/v1/eventify";
-
-app.use(baseUrl, userRoutes);
-app.use(baseUrl, passRoutes);
-app.use(baseUrl, categoryRoutes);
-app.use(baseUrl, eventRoutes);
-app.use(baseUrl, statsRoutes);
-app.use(baseUrl, utilityRoutes);
-app.use("/", (req, res) =>
-  res.status(200).json({
-    message: "Hello World",
-  })
-);
