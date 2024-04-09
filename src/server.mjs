@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import bodyParser from "body-parser";
 import userRoutes from "./routes/user_routes.mjs";
 import passRoutes from "./routes/pass_routes.mjs";
 import categoryRoutes from "./routes/category_routes.mjs";
@@ -10,7 +11,7 @@ import utilityRoutes from "./routes/utility_routes.mjs";
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json()); 
 
 const baseUrl = "/api/v1/eventify";
 
