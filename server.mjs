@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import userRoutes from "./routes/user_routes.mjs";
-import passRoutes from "./routes/pass_routes.mjs";
-import categoryRoutes from "./routes/category_routes.mjs";
-import eventRoutes from "./routes/event_routes.mjs";
-import statsRoutes from "./routes/stats_route.mjs";
-import utilityRoutes from "./routes/utility_routes.mjs";
+import userRoutes from "./src/routes/user_routes.mjs";
+import passRoutes from "./src/routes/pass_routes.mjs";
+import categoryRoutes from "./src/routes/category_routes.mjs";
+import eventRoutes from "./src/routes/event_routes.mjs";
+import statsRoutes from "./src/routes/stats_route.mjs";
+import utilityRoutes from "./src/routes/utility_routes.mjs";
 
 const app = express();
 
