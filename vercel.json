@@ -1,6 +1,16 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "src/index.mjs",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
+    {
+      "src": "^/api/v1/eventify/(.*)",
+      "dest": "/src/index.mjs"
+    },
     {
       "src": "/(.*)",
       "dest": "/src/index.mjs"

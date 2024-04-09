@@ -49,23 +49,3 @@ client
       console.log(`http server running => ${port}`);
     });
   });
-
-// MongoClient.connect(uri, {
-//   maxPoolSize: 50,
-//   wtimeoutMS: 2500,
-// })
-//   .catch((err) => {
-//     console.error(err.stack);
-//     process.exit(1);
-//   })
-//   .then(async (client) => {
-//     await UserService.connectDatabase(client);
-//     await PassService.connectDatabase(client);
-//     await CategoryService.connectDatabase(client);
-//     await EventService.connectDatabase(client);
-//     EmailUtility.initialize(smtpConfig);
-//     FirebaseUtility.initializeApp();
-//     app.listen(port, () => {
-//       console.log(`http server running => ${port}`);
-//     });
-//   });
