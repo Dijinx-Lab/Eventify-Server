@@ -3,8 +3,9 @@ import keyConfig from "../config/key_config.mjs";
 
 class FirebaseUtility {
   static initializeApp() {
+    const serviceAccount = JSON.parse(keyConfig.firebase.keyLocation);
     admin.initializeApp({
-      credential: admin.credential.cert(keyConfig.firebase.keyLocation),
+      credential: admin.credential.cert(serviceAccount),
     });
   }
 
