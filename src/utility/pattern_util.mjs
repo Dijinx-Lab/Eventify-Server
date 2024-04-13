@@ -1,7 +1,7 @@
 const PatternUtil = {
   // Method to check if a password has a length greater than 8 characters
   checkPasswordLength: (password) => {
-    return password.length > 8;
+    return password.length >= 8;
   },
 
   // Method to check if the email has a valid pattern

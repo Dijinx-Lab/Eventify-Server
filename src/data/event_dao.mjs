@@ -33,7 +33,23 @@ export default class EventDAO {
   static async getAllEventFromDB() {
     try {
       const events = await eventconn
-        .find({ deleted_on: null, listing_visibile: true })
+        .find({
+          deleted_on: null,
+          listing_visibile: true,
+          approved_on: { $ne: null },
+        })
+        .toArray();
+      return events;
+    } catch (e) {
+      console.error(`Unable to get categories: ${e}`);
+      return null;
+    }
+  }
+
+  static async getUnapprovedEventsFromDB() {
+    try {
+      const events = await eventconn
+        .find({ deleted_on: null, approved_on: null })
         .toArray();
       return events;
     } catch (e) {
@@ -73,7 +89,12 @@ export default class EventDAO {
       const regex = new RegExp(city, "i");
 
       const events = await eventconn
-        .find({ city: regex, deleted_on: null, listing_visibile: true })
+        .find({
+          city: regex,
+          deleted_on: null,
+          listing_visibile: true,
+          approved_on: { $ne: null },
+        })
         .toArray();
 
       return events;
@@ -85,7 +106,10 @@ export default class EventDAO {
 
   static async getEventByIDFromDB(id) {
     try {
-      const event = await eventconn.findOne({ _id: id, deleted_on: null });
+      const event = await eventconn.findOne({
+        _id: id,
+        deleted_on: null,
+      });
       return event;
     } catch (e) {
       console.error(`Unable to get category by ID: ${e}`);

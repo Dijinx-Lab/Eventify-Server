@@ -29,7 +29,6 @@ const smtpConfig = {
 
 const username = encodeURIComponent(databaseConfig.database.username);
 const password = encodeURIComponent(databaseConfig.database.password);
-//const uri = `mongodb://${username}:${password}@${databaseConfig.database.host}:${databaseConfig.database.port}/${databaseConfig.database.dbName}`;
 const uri = `mongodb+srv://${username}:${password}@eventbazaar.y8gsrgm.mongodb.net/?retryWrites=true&w=majority&appName=${databaseConfig.database.dbName}`;
 const client = new MongoClient(uri, {
   serverApi: {

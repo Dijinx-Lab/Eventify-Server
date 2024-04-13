@@ -196,6 +196,7 @@ export default class UserService {
         alerted: [],
         verification: verification,
         last_signin_on: createdOn,
+        app_side_preference: "new",
         email_verified_on: emailVerifiedOn,
         phone_verified_on: phoneVerifiedOn,
         created_on: createdOn,
@@ -509,7 +510,6 @@ export default class UserService {
     googleId,
     fcmToken
   ) {
-    console.log(existingUser._id);
     const signedInOn = new Date();
 
     const authToken = TokenUtil.createToken({
@@ -560,6 +560,7 @@ export default class UserService {
       apple_id: appleId ?? null,
       verification: verification,
       last_signin_on: createdOn,
+      app_side_preference: "new",
       email_verified_on: emailVerifiedOn,
       phone_verified_on: phoneVerifiedOn,
       created_on: createdOn,
@@ -630,6 +631,7 @@ export default class UserService {
       }
       databaseUser = await UserDAO.updateUserFieldByID(databaseUser._id, {
         auth_token: null,
+        fcm_token: null,
       });
 
       return {};

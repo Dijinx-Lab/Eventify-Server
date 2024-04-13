@@ -242,8 +242,9 @@ export default class PassService {
   static async getPassesByEventId(eventId) {
     try {
       let filteredPasses = [];
-
       const databasePasses = await PassDAO.getPassesByEventIDFromDB(eventId);
+
+      if (databasePasses.length === 0) return [];
 
       if (databasePasses && databasePasses.length > 0) {
         filteredPasses = databasePasses.map((pass) => {

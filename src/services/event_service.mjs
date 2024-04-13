@@ -36,13 +36,22 @@ export default class EventService {
   ) {
     try {
       const categoryObjId = new ObjectId(categoryId);
-      const passObjIds = passIds.map((passId) => {
-        return new ObjectId(passId);
-      });
+      let passObjIds = [];
+      if (passIds.length !== 0) {
+        passIds.map((passId) => {
+          return new ObjectId(passId);
+        });
+      }
+
       const [user, category] = await Promise.all([
         UserService.getUserFromToken(token),
         CategoryService.getCategoryById(categoryObjId),
       ]);
+
+      const updatedUser = await UserService.updateUser(user._id, {
+        app_side_preference: "lister",
+      });
+
       if (!category) {
         return "No such category exists with the specified ID";
       }
@@ -79,7 +88,8 @@ export default class EventService {
         category_id: categoryObjId,
         contact: contact,
         stats: stats,
-        alert_sent_on: listingVisibile === true ? notificationSentOn : null,
+        alert_sent_on: null,
+        approved_on: null,
         created_on: createdOn,
         deleted_on: deletedOn,
       };
@@ -91,10 +101,8 @@ export default class EventService {
         PassService.getPassesAndConnectEvent(passObjIds, addedEventId),
       ]);
 
-      if (listingVisibile) {
-        await this.notifyNearByUsers(user, databaseEvent);
-      }
       databaseEvent.pass_ids = databasePasses;
+
       databaseEvent.category = category;
       databaseEvent.stats = this.getStatsNumbers(databaseEvent.stats);
 
@@ -145,14 +153,20 @@ export default class EventService {
           );
           events = events.filter(Boolean);
         }
+      } else if (filter.toLowerCase() === "unapproved") {
+        events = await EventDAO.getUnapprovedEventsFromDB();
       } else {
         events = await EventDAO.getAllEventsByCityFromDB(filter);
       }
-
       let filteredEvents = [];
       if (events && events.length > 0) {
         filteredEvents = await Promise.all(
-          events.map((event) => this.getFormattedEvent(event, user._id))
+          events.map((event) =>
+            this.getFormattedEvent(
+              event,
+              filter.toLowerCase() === "unapproved" ? null : user._id
+            )
+          )
         );
       }
 
@@ -162,18 +176,46 @@ export default class EventService {
     }
   }
 
+  static async notifyUserOfApproval(eventUser, event) {
+    try {
+      if (eventUser.fcm_token !== null && eventUser.fcm_token !== "x") {
+        let message = "";
+        if (event.listing_visibile) {
+          message = `Hi ${eventUser.first_name}, ${event.name} just got approved by our team. Your event is now discoverable publicly on Event Bazaar`;
+        } else {
+          message = `Hi ${eventUser.first_name}, ${event.name} just got approved by our team. However your event is not discoverable publicly on Event Bazaar, please turn its visibility on to do so`;
+        }
+        const res = await FirebaseUtility.sendNotification(
+          eventUser.fcm_token,
+          event._id.toString(),
+          "open_lister_events",
+          "Your event is approved 🥳🥳",
+          message
+        );
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   static async notifyNearByUsers(eventUser, event) {
     try {
       const users = await UserService.getUserByCity(event.city);
 
       for (const user of users) {
-        if (user.fcm_token === null || user.fcm_token === "x") continue;
+        if (
+          user.fcm_token === null ||
+          user.fcm_token === "x" ||
+          user._id.toString() === eventUser._id.toString()
+        ) {
+          continue;
+        }
 
         const alerted = user.alerted;
         alerted.push(event._id);
         user.alerted = alerted;
         await UserService.updateUserByUser(user);
-        await FirebaseUtility.sendNotification(
+        const res = await FirebaseUtility.sendNotification(
           user.fcm_token,
           event._id.toString(),
           "open_alerts",
@@ -352,6 +394,45 @@ export default class EventService {
       );
 
       return { event: filteredEvent };
+    } catch (e) {
+      return e.message;
+    }
+  }
+
+  static async approveEvent(id) {
+    try {
+      const eventObjId = new ObjectId(id);
+      let existingEvent = await EventDAO.getEventByIDFromDB(eventObjId);
+
+      if (!existingEvent) {
+        return "We do not have an event with the specified ID";
+      }
+      if (existingEvent.approved_on) {
+        return "This event is already approved can't re-approve it";
+      }
+      let user = await UserService.getUserByID(existingEvent.user_id);
+      if (!user) {
+        return "We do not have an user with the specified ID";
+      }
+
+      const approvedOn = new Date();
+      await this.notifyUserOfApproval(user, existingEvent);
+
+      if (
+        existingEvent.listing_visibile &&
+        existingEvent.alert_sent_on === null
+      ) {
+        const userbaseNotifiedOn = new Date();
+        await EventDAO.updateEventFieldByID(eventObjId, {
+          alert_sent_on: userbaseNotifiedOn,
+        });
+        await this.notifyNearByUsers(user, existingEvent);
+      }
+      await EventDAO.updateEventFieldByID(eventObjId, {
+        approved_on: approvedOn,
+      });
+      existingEvent = await EventDAO.getEventByIDFromDB(eventObjId);
+      return { event: existingEvent };
     } catch (e) {
       return e.message;
     }

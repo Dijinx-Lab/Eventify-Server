@@ -37,7 +37,6 @@ router
   .route(baseRoute + "/list")
   .get(
     checkRequiredFieldsMiddleware(["filter"]),
-    checkTokenMiddleware,
     EventController.apiListEvents
   );
 
@@ -56,5 +55,9 @@ router
     checkTokenMiddleware,
     EventController.apiUpdateEvent
   );
+
+router
+  .route(baseRoute + "/approve")
+  .post(checkRequiredFieldsMiddleware(["id"]), EventController.apiApproveEvent);
 
 export default router;
