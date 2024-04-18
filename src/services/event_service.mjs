@@ -128,14 +128,21 @@ export default class EventService {
   static async listEvents(filter, token) {
     try {
       const user = await UserService.getUserFromToken(token);
-
+      const isForAll = filter.toLowerCase() === "all";
+      const isForUser = filter.toLowerCase() === "user";
+      const isForBookmarked = filter.toLowerCase() === "bookmarked";
+      const isForAlerted = filter.toLowerCase() === "alerted";
+      const isForUnapproved = filter.toLowerCase() === "unapproved";
+      if (!user && (isForAll || isForUser || isForBookmarked || isForAlerted)) {
+        return "Malformed or unknown token in the header";
+      }
       let events = [];
-      if (filter.toLowerCase() === "all") {
+      if (isForAll) {
         events = await EventDAO.getAllEventFromDB();
-      } else if (filter.toLowerCase() === "user") {
+      } else if (isForUser) {
         const user = await UserService.getUserFromToken(token);
         events = await EventDAO.getAllEventByUserFromDB(user._id);
-      } else if (filter.toLowerCase() === "bookmarked") {
+      } else if (isForBookmarked) {
         if (user.bookmarked && user.bookmarked.length !== 0) {
           events = await Promise.all(
             user.bookmarked.map(async (id) => {
@@ -144,7 +151,7 @@ export default class EventService {
           );
         }
         events = events.filter(Boolean);
-      } else if (filter.toLowerCase() === "alerted") {
+      } else if (isForAlerted) {
         if (user.alerted && user.alerted.length !== 0) {
           events = await Promise.all(
             user.alerted.map(async (id) => {
@@ -153,7 +160,7 @@ export default class EventService {
           );
           events = events.filter(Boolean);
         }
-      } else if (filter.toLowerCase() === "unapproved") {
+      } else if (isForUnapproved) {
         events = await EventDAO.getUnapprovedEventsFromDB();
       } else {
         events = await EventDAO.getAllEventsByCityFromDB(filter);
@@ -172,6 +179,7 @@ export default class EventService {
 
       return { events: filteredEvents };
     } catch (e) {
+      console.log(e);
       return e.message;
     }
   }

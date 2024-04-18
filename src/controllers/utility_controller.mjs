@@ -50,4 +50,6 @@ export default class UtilityController {
       res.status(500).json({ success: false, data: {}, message: e.message });
     }
   }
+
+  
 }
