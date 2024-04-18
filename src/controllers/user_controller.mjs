@@ -208,6 +208,7 @@ export default class UserController {
         last_city,
         fcm_token,
         app_side_preference,
+        age,
       } = req.body;
       const updateFields = Object.fromEntries(
         Object.entries({
@@ -218,6 +219,7 @@ export default class UserController {
           last_city,
           fcm_token,
           app_side_preference,
+          age,
         }).filter(([_, value]) => value !== undefined && value !== null)
       );
       const token = TokenUtil.cleanToken(req.headers["authorization"]);
