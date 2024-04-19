@@ -38,7 +38,7 @@ export default class EventService {
       const categoryObjId = new ObjectId(categoryId);
       let passObjIds = [];
       if (passIds.length !== 0) {
-        passIds.map((passId) => {
+        passObjIds = passIds.map((passId) => {
           return new ObjectId(passId);
         });
       }
@@ -59,9 +59,9 @@ export default class EventService {
       const deletedOn = null;
 
       let notificationSentOn = null;
-      if (listingVisibile) {
-        notificationSentOn = createdOn;
-      }
+      // if (listingVisibile) {
+      //   notificationSentOn = createdOn;
+      // }
       const stats = {
         viewed: [],
         interested: [],
