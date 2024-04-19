@@ -23,11 +23,10 @@ router
   );
 
 router.get(baseRoute + "/privacy", (req, res) => {
-  const parentDir = __dirname.split(path.sep).slice(0, -2).join(path.sep);
+  const parentDir = __dirname.split(path.sep).slice(0, -1).join(path.sep);
   console.log(__dirname);
   console.log(parentDir);
-  const filePath = path.join(parentDir, "res", "privacy_policy.html");
-  // const filePath = path.join(__dirname, "../res", "privacy_policy.html");
+  const filePath = path.join(parentDir, "assets", "privacy_policy.html");
   res.sendFile(filePath);
 });
 
