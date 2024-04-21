@@ -28,4 +28,24 @@ export default class StatsController {
       res.status(500).json({ success: false, data: {}, message: e.message });
     }
   }
+
+  static async getStatsUser(req, res, next) {
+    try {
+      const { id, filter } = req.query;
+      const serviceResponse = await StatsService.getStatsUser(id, filter);
+      if (typeof serviceResponse === "string") {
+        res
+          .status(200)
+          .json({ success: false, data: {}, message: serviceResponse });
+      } else {
+        res.status(200).json({
+          success: true,
+          data: serviceResponse,
+          message: "",
+        });
+      }
+    } catch (e) {
+      res.status(500).json({ success: false, data: {}, message: e.message });
+    }
+  }
 }

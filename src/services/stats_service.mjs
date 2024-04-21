@@ -1,8 +1,62 @@
 import { ObjectId } from "mongodb";
 import EventService from "./event_service.mjs";
 import UserService from "./user_service.mjs";
+import PatternUtil from "../utility/pattern_util.mjs";
 
 export default class StatsService {
+  static async getStatsUser(eventId, filter) {
+    try {
+      const eventObjId = new ObjectId(eventId);
+      let event = await EventService.getEventById(eventObjId);
+
+      if (!event) {
+        return "No such event exists with the specified ID";
+      }
+
+      const isForInterested = filter.toLowerCase() === "interested";
+      const isForGoing = filter.toLowerCase() === "going";
+      const isForBookmarked = filter.toLowerCase() === "bookmarked";
+
+      let users = [];
+
+      if (isForInterested) {
+        users = event.stats.interested;
+      } else if (isForGoing) {
+        users = event.stats.going;
+      } else if (isForBookmarked) {
+        users = event.stats.bookmarked;
+      } else {
+        return "Invalid filter value";
+      }
+
+      if (users.length !== 0) {
+        const userPromises = users.map((userId) =>
+          UserService.getUserByID(userId)
+        );
+        let userDetails = await Promise.all(userPromises);
+        userDetails = userDetails.map((user) =>
+          PatternUtil.keepParametersFromObject(user, [
+            "first_name",
+            "last_name",
+            "email",
+            "country_code",
+            "phone",
+          ])
+        );
+        users = userDetails;
+      }
+
+      const stats = EventService.getStatsNumbers(event.stats);
+
+      return {
+        stats: stats,
+        users: users,
+      };
+    } catch (e) {
+      return e.message;
+    }
+  }
+
   static async updateStats(token, eventId, preference, bookmarked) {
     try {
       const eventObjId = new ObjectId(eventId);

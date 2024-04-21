@@ -16,4 +16,12 @@ router
     StatsController.apiUpdateEventStats
   );
 
+router
+  .route(baseRoute + "/users")
+  .get(
+    checkRequiredFieldsMiddleware(["id", "filter"]),
+    checkTokenMiddleware,
+    StatsController.getStatsUser
+  );
+
 export default router;

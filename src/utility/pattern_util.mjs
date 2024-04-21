@@ -30,6 +30,13 @@ const PatternUtil = {
     return objectWithoutParams;
   },
 
+  keepParametersFromObject: (object, paramsToKeep) => {
+    const objectWithFilteredParams = Object.fromEntries(
+      Object.entries(object).filter(([key]) => paramsToKeep.includes(key))
+    );
+    return objectWithFilteredParams;
+  },
+
   // Method to generate a random string
   // Must be used with a DB check to ensure uniqueness
   generateRandomCode() {
