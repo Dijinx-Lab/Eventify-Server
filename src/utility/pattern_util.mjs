@@ -12,7 +12,7 @@ const PatternUtil = {
 
   // Method to check if a name consists of only alphabets
   checkAlphabeticName: (name) => {
-    const alphabeticPattern = /^[a-zA-Z]+$/;
+    const alphabeticPattern = /^[a-zA-Z ]+$/;
     return alphabeticPattern.test(name);
   },
 
