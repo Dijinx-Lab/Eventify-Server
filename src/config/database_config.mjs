@@ -16,6 +16,7 @@ const databaseConfig = {
   collections: {
     usersDatabase: process.env.USER_DB,
     eventsDatabase: process.env.EVENT_DB,
+    salesDatabase: process.env.SALE_DB,
     passDatabase: process.env.PASS_DB,
     categoriesDatabase: process.env.CATEGORY_DB,
     utilitiesDatabase: process.env.UTILITY_DB,

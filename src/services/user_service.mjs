@@ -602,6 +602,19 @@ export default class UserService {
     }
   }
 
+  static async getAllUsers() {
+    try {
+      let databaseUsers = await UserDAO.getAllUserFromDB();
+      if (!databaseUsers) {
+        return [];
+      }
+
+      return databaseUsers;
+    } catch (e) {
+      return e.message;
+    }
+  }
+
   static getFormattedUser(rawUser) {
     const filteredUser = PatternUtil.filterParametersFromObject(rawUser, [
       "_id",

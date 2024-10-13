@@ -5,11 +5,12 @@ export default class StatsController {
   static async apiUpdateEventStats(req, res, next) {
     try {
       const { preference, bookmarked } = req.body;
-      const { id } = req.query;
+      const { id, sale } = req.query;
       const token = TokenUtil.cleanToken(req.headers["authorization"]);
       const serviceResponse = await StatsService.updateStats(
         token,
         id,
+        sale,
         preference,
         bookmarked
       );
@@ -31,8 +32,8 @@ export default class StatsController {
 
   static async getStatsUser(req, res, next) {
     try {
-      const { id, filter } = req.query;
-      const serviceResponse = await StatsService.getStatsUser(id, filter);
+      const { id, filter, sale } = req.query;
+      const serviceResponse = await StatsService.getStatsUser(id, filter, sale);
       if (typeof serviceResponse === "string") {
         res
           .status(200)

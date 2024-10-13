@@ -11,7 +11,7 @@ const baseRoute = "/stats";
 router
   .route(baseRoute + "/update")
   .put(
-    checkRequiredFieldsMiddleware(["id"]),
+    checkRequiredFieldsMiddleware(["id", "sale"]),
     checkTokenMiddleware,
     StatsController.apiUpdateEventStats
   );
@@ -19,7 +19,7 @@ router
 router
   .route(baseRoute + "/users")
   .get(
-    checkRequiredFieldsMiddleware(["id", "filter"]),
+    checkRequiredFieldsMiddleware(["id", "filter", "sale"]),
     checkTokenMiddleware,
     StatsController.getStatsUser
   );

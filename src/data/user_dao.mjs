@@ -100,6 +100,20 @@ export default class UserDAO {
     }
   }
 
+  static async getAllUserFromDB() {
+    try {
+      const users = await usercon
+        .find({
+          deleted_on: null,
+        })
+        .toArray();
+      return users;
+    } catch (e) {
+      console.error(`Unable to get user by email: ${e}`);
+      return null;
+    }
+  }
+
   static async getUserByGoogleIDFromDB(id) {
     try {
       const user = await usercon.findOne({ google_id: id });

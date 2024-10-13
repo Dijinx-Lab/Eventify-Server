@@ -1,16 +1,20 @@
 import { ObjectId } from "mongodb";
 import EventService from "./event_service.mjs";
+import SaleService from "./sale_service.mjs";
 import UserService from "./user_service.mjs";
 import PatternUtil from "../utility/pattern_util.mjs";
 
 export default class StatsService {
-  static async getStatsUser(eventId, filter) {
+  static async getStatsUser(eventId, filter, sale) {
     try {
       const eventObjId = new ObjectId(eventId);
-      let event = await EventService.getEventById(eventObjId);
-
+      let event = sale
+        ? await SaleService.getSaleById(eventObjId)
+        : await EventService.getEventById(eventObjId);
       if (!event) {
-        return "No such event exists with the specified ID";
+        return sale
+          ? "No such sale exists with the specified ID"
+          : "No such event exists with the specified ID";
       }
 
       const isForInterested = filter.toLowerCase() === "interested";
@@ -57,17 +61,22 @@ export default class StatsService {
     }
   }
 
-  static async updateStats(token, eventId, preference, bookmarked) {
+  static async updateStats(token, eventId, sale, preference, bookmarked) {
     try {
       const eventObjId = new ObjectId(eventId);
-      let [event, user] = await Promise.all([
-        EventService.getEventById(eventObjId),
-        UserService.getUserFromToken(token),
-      ]);
+      let [event, user] = sale
+        ? await Promise.all([
+            SaleService.getSaleById(eventObjId),
+            UserService.getUserFromToken(token),
+          ])
+        : await Promise.all([
+            EventService.getEventById(eventObjId),
+            UserService.getUserFromToken(token),
+          ]);
 
       if (!event) {
         return "No such event exists with the specified ID";
-      } else if (event._id.toString() === user._id.toString()) {
+      } else if (event.user_id.toString() === user._id.toString()) {
         return {};
       }
 
@@ -75,7 +84,9 @@ export default class StatsService {
       event = await this.updateBookmarks(event, bookmarked, user);
       event = await this.updatePreference(event, user, preference);
 
-      const updatedEvent = await EventService.replaceCompleteEvent(event);
+      const updatedEvent = sale
+        ? await SaleService.replaceCompleteSale(event)
+        : await EventService.replaceCompleteEvent(event);
 
       return {};
     } catch (e) {
