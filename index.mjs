@@ -42,7 +42,6 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-
 const app = express();
 
 app.use(cors());

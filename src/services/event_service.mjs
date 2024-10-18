@@ -261,6 +261,12 @@ export default class EventService {
     ]);
     let preferences = null;
     let myEvent = false;
+    if (
+      event.images.length === 1 &&
+      Object.keys(event.images[0]).length === 0
+    ) {
+      event.images = null;
+    }
     event.my_event = myEvent;
     if (userId) {
       if (event.user_id.toString() === userId.toString()) {
@@ -442,7 +448,7 @@ export default class EventService {
         await EventDAO.updateEventFieldByID(eventObjId, {
           alert_sent_on: userbaseNotifiedOn,
         });
-        await this.notifyNearByUsers(user, existingEvent);
+        this.notifyNearByUsers(user, existingEvent);
       }
       await EventDAO.updateEventFieldByID(eventObjId, {
         approved_on: approvedOn,

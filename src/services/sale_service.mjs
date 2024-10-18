@@ -136,7 +136,11 @@ export default class SaleService {
         );
       }
 
-      return { sales: filteredEvents };
+      return {
+        sales: filteredEvents.filter(
+          (event) => event !== null && event !== undefined
+        ),
+      };
     } catch (e) {
       console.log(e);
       return e.message;
@@ -208,6 +212,13 @@ export default class SaleService {
   static async getFormattedEvent(event, userId) {
     let preferences = null;
     let myEvent = false;
+    if (
+      event.images.length === 1 &&
+      Object.keys(event.images[0]).length === 0
+    ) {
+      event.images = [];
+    }
+
     event.my_event = myEvent;
     if (userId) {
       if (event.user_id.toString() === userId.toString()) {
@@ -248,10 +259,12 @@ export default class SaleService {
       _id: "id",
     });
 
-    return (filteredEvent = PatternUtil.filterParametersFromObject(
-      filteredEvent,
-      ["created_on", "deleted_on", "alert_sent_on", "user_id"]
-    ));
+    return filteredEvent;
+
+    // return (filteredEvent = PatternUtil.filterParametersFromObject(
+    //   filteredEvent,
+    //   ["created_on", "deleted_on", "alert_sent_on", "user_id"]
+    // ));
   }
 
   static async getSaleById(id) {
@@ -350,6 +363,7 @@ export default class SaleService {
       }
 
       const approvedOn = new Date();
+
       await this.notifyUserOfApproval(user, existingEvent);
 
       if (
@@ -360,7 +374,7 @@ export default class SaleService {
         await SaleDAO.updateSaleFieldByID(eventObjId, {
           alert_sent_on: userbaseNotifiedOn,
         });
-        await this.notifyUsers(user, existingEvent);
+        this.notifyUsers(user, existingEvent);
       }
       await SaleDAO.updateSaleFieldByID(eventObjId, {
         approved_on: approvedOn,
