@@ -83,7 +83,7 @@ export default class SaleController {
           data: serviceResponse,
           message: "Event deleted successfully",
         });
-      }
+      } //
     } catch (e) {
       res.status(500).json({ success: false, data: {}, message: e.message });
     }
