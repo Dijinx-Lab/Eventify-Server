@@ -8,22 +8,24 @@ const router = express.Router();
 const baseRoute = "/sale";
 
 //api routes
-router.route(baseRoute + "/create").post(
-  checkRequiredFieldsMiddleware([
-    "listing_visibile",
-    "name",
-    "description",
-    "start_date_time",
-    "end_date_time",
-    "link_to_stores",
-    "website",
-    "discount_description",
-    "images",
-    // "contact",
-  ]),
-  checkTokenMiddleware,
-  SaleController.apiCreateEvent
-);
+router
+  .route(baseRoute + "/create")
+  .post(
+    checkRequiredFieldsMiddleware([
+      "listing_visibile",
+      "name",
+      "description",
+      "start_date_time",
+      "end_date_time",
+      "link_to_stores",
+      "website",
+      "discount_description",
+      "images",
+      "brand",
+    ]),
+    checkTokenMiddleware,
+    SaleController.apiCreateEvent
+  );
 
 router
   .route(baseRoute + "/list")
