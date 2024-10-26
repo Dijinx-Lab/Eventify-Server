@@ -25,8 +25,8 @@ export default class SaleService {
     link_to_stores,
     website,
     discount_description,
-    images,
-    contact
+    images
+    // contact
   ) {
     try {
       const user = await UserService.getUserFromToken(token);
@@ -57,7 +57,7 @@ export default class SaleService {
         website: website,
         discount_description: discount_description,
         images: images,
-        contact: contact,
+        // contact: contact,
         stats: stats,
         alert_sent_on: null,
         approved_on: null,

@@ -14,7 +14,7 @@ export default class SaleController {
         website,
         discount_description,
         images,
-        contact,
+        // contact,
       } = req.body;
       const token = TokenUtil.cleanToken(req.headers["authorization"]);
       const serviceResponse = await SaleService.createEvent(
@@ -27,8 +27,8 @@ export default class SaleController {
         link_to_stores,
         website,
         discount_description,
-        images,
-        contact
+        images
+        // contact
       );
       if (typeof serviceResponse === "string") {
         res
@@ -101,7 +101,7 @@ export default class SaleController {
         website,
         discount_description,
         images,
-        contact,
+        // contact,
       } = req.body;
       const { id } = req.query;
       const updateFields = Object.fromEntries(
@@ -115,7 +115,7 @@ export default class SaleController {
           website,
           discount_description,
           images,
-          contact,
+          // contact,
         }).filter(([_, value]) => value !== undefined && value !== null)
       );
       const serviceResponse = await SaleService.updateSaleFromAPI(
