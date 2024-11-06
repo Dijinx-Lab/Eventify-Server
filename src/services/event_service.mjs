@@ -5,6 +5,7 @@ import CategoryService from "./category_service.mjs";
 import PassService from "./pass_service.mjs";
 import UserService from "./user_service.mjs";
 import FirebaseUtility from "../utility/fcm_utility.mjs";
+import moment from "moment-timezone";
 
 export default class EventService {
   static async connectDatabase(client) {
@@ -173,6 +174,12 @@ export default class EventService {
       } else {
         events = await EventDAO.getAllEventsByCityFromDB(filter);
       }
+
+      const currentDateTimeInPakistan = moment().tz("Asia/Karachi");
+      events = events.filter((event) =>
+        moment(event.date_time).isAfter(currentDateTimeInPakistan)
+      );
+
       let filteredEvents = [];
       if (events && events.length > 0) {
         filteredEvents = await Promise.all(
@@ -184,6 +191,8 @@ export default class EventService {
           )
         );
       }
+
+      console.log(filteredEvents.length);
 
       return { events: filteredEvents };
     } catch (e) {

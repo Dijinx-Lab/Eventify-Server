@@ -5,6 +5,7 @@ import PassService from "./pass_service.mjs";
 import UserService from "./user_service.mjs";
 import FirebaseUtility from "../utility/fcm_utility.mjs";
 import SaleDAO from "../data/sale_dao.mjs";
+import moment from "moment-timezone";
 
 export default class SaleService {
   static async connectDatabase(client) {
@@ -124,6 +125,12 @@ export default class SaleService {
       } else {
         events = await SaleDAO.getAllSalesFromDB();
       }
+
+      const currentDateTimeInPakistan = moment().tz("Asia/Karachi");
+      events = events.filter((event) =>
+        moment(event.date_time).isAfter(currentDateTimeInPakistan)
+      );
+
       let filteredEvents = [];
       if (events && events.length > 0) {
         filteredEvents = await Promise.all(
